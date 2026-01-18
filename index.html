@@ -928,6 +928,19 @@
             player2.hp = player2.maxHp;
             player2.itemUsed = false;
         }
+        
+        // 各バトル開始時にPPを少し回復
+        if (round > 0) {
+            player.moveSet.forEach(move => {
+                move.currentPP = Math.min(move.pp, move.currentPP + 2);
+            });
+            if (player2) {
+                player2.moveSet.forEach(move => {
+                    move.currentPP = Math.min(move.pp, move.currentPP + 2);
+                });
+            }
+        }
+        
         turnCount = 0;
         eventModifiers = { atkMult: 1, accPenalty: 0 };
 
@@ -1008,6 +1021,11 @@
             addLog(`${enemy.name} と ${enemy2.name} が立ちはだかった！`);
         } else {
             addLog(`${enemy.name} が立ちはだかった！`);
+        }
+        
+        // PP回復のお知らせ（2回戦目以降）
+        if (round > 0 && round < opponents.length) {
+            addLog('▶ 各技のPPが2ずつ回復した！', 'text-cyan-400');
         }
         
         // トーナメント表の現在の対戦をハイライト
@@ -1132,11 +1150,26 @@
             // タッグバトルの場合は2ラウンド進む
             const roundIncrement = battleMode === 'tag' && enemy2 ? 2 : 1;
             
-            // ラウンド3突破ボーナス (シングルなら2, タッグなら4)
-            const bonusRound = battleMode === 'tag' ? 4 : 2;
-            if (round === bonusRound) {
+            // PP全回復ボーナス（3, 5, 8回戦突破時）
+            const bonusRound1 = battleMode === 'tag' ? 4 : 2;   // 3回戦目
+            const bonusRound2 = battleMode === 'tag' ? 8 : 4;   // 5回戦目
+            const bonusRound3 = battleMode === 'tag' ? 14 : 7;  // 8回戦目
+            
+            if (round === bonusRound1) {
                 await new Promise(r => setTimeout(r, 800));
                 addLog(`【3回戦突破ボーナス】全PPが回復した！`, 'text-sky-400 font-bold');
+                player.moveSet.forEach(move => move.currentPP = move.pp);
+                if (player2) player2.moveSet.forEach(move => move.currentPP = move.pp);
+                sound.playSe('heal');
+            } else if (round === bonusRound2) {
+                await new Promise(r => setTimeout(r, 800));
+                addLog(`【5回戦突破ボーナス】全PPが回復した！`, 'text-emerald-400 font-bold');
+                player.moveSet.forEach(move => move.currentPP = move.pp);
+                if (player2) player2.moveSet.forEach(move => move.currentPP = move.pp);
+                sound.playSe('heal');
+            } else if (round === bonusRound3) {
+                await new Promise(r => setTimeout(r, 800));
+                addLog(`【8回戦突破ボーナス】全PPが回復した！`, 'text-yellow-400 font-bold');
                 player.moveSet.forEach(move => move.currentPP = move.pp);
                 if (player2) player2.moveSet.forEach(move => move.currentPP = move.pp);
                 sound.playSe('heal');
